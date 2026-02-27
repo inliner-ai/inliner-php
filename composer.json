@@ -1,0 +1,33 @@
+{
+    "name": "inliner/inliner-php",
+    "description": "Official PHP client for Inliner.ai — image tagging, generation, and management",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Inliner",
+            "email": "support@inliner.ai"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=8.1",
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Inliner": "src/"
+        }
+    },
+    "keywords": [
+        "inliner",
+        "ai-images",
+        "tagging",
+        "image-generation",
+        "sdk",
+        "client"
+    ]
+}
