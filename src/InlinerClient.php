@@ -123,7 +123,7 @@ class InlinerClient
         if (is_string($source) && str_starts_with($source, "http")) {
             // URL Chaining
             $urlParts = parse_url($source);
-            $basePath = ltrim($urlParts['path'], "/");
+            $basePath = ltrim($urlParts['path'] ?? '', "/");
             $contentPath = "$basePath/$editSlug$dimsSuffix.$format";
             return $this->pollImage($contentPath, "Editing");
         } else {
@@ -165,7 +165,7 @@ class InlinerClient
                     ];
                 }
             } catch (\Exception $e) {
-                // If it's a 202, just wait. Otherwise rethrow if not a "not found" style error during polling
+                // Ignore 202 and transient errors during polling
             }
 
             sleep(3);
@@ -189,7 +189,7 @@ class InlinerClient
         $multipart = [
             [
                 'name'     => 'file',
-                'contents' => is_resource($file) ? $file : (is_string($file) ? $file : fopen($file, 'r')),
+                'contents' => is_resource($file) ? $file : (is_string($file) && !file_exists($file) ? $file : fopen($file, 'r')),
                 'filename' => $filename
             ],
             ['name' => 'project', 'contents' => $project],
@@ -234,7 +234,67 @@ class InlinerClient
         ]);
     }
 
+    public function renameImage(string $contentId, string $newUrl): array
+    {
+        return $this->apiFetch("POST", "content/rename/$contentId", [
+            'json' => ['newUrl' => $newUrl]
+        ]);
+    }
+
+    // --- Tagging ---
+
+    public function getAllTags(): array
+    {
+        return $this->apiFetch("GET", "content/tags");
+    }
+
+    public function addTags(array $contentIds, array $tags): array
+    {
+        return $this->apiFetch("POST", "content/tags", [
+            'json' => ['contentIds' => $contentIds, 'tags' => $tags]
+        ]);
+    }
+
+    public function removeTags(array $contentIds, array $tags): array
+    {
+        return $this->apiFetch("POST", "content/tags/remove", [
+            'json' => ['contentIds' => $contentIds, 'tags' => $tags]
+        ]);
+    }
+
+    public function replaceTags(array $contentIds, array $tags): array
+    {
+        return $this->apiFetch("POST", "content/tags/replace", [
+            'json' => ['contentIds' => $contentIds, 'tags' => $tags]
+        ]);
+    }
+
+    // --- Projects ---
+
+    public function listProjects(): array
+    {
+        return $this->apiFetch("GET", "account/projects");
+    }
+
+    public function createProject(array $projectData): array
+    {
+        return $this->apiFetch("POST", "account/projects", [
+            'json' => $projectData
+        ]);
+    }
+
+    public function getProjectDetails(string $projectId): array
+    {
+        return $this->apiFetch("GET", "account/projects/$projectId");
+    }
+
     // --- Helpers ---
+
+    public function buildImageUrl(string $project, string $description, int $width, int $height, string $format = "png"): string
+    {
+        $slug = $this->slugify($description);
+        return "{$this->imageUrl}/$project/{$slug}_{$width}x{$height}.$format";
+    }
 
     public function slugify(string $text): string
     {
