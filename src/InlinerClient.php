@@ -269,6 +269,13 @@ class InlinerClient
         ]);
     }
 
+    public function updateMetadata(array $contentIds, array $metadata): array
+    {
+        return $this->apiFetch("POST", "content/metadata", [
+            'json' => ['contentIds' => $contentIds, 'metadata' => $metadata]
+        ]);
+    }
+
     // --- Projects ---
 
     public function listProjects(): array
